@@ -39,7 +39,7 @@
     "camelcase": "error",
     "eqeqeq": "error",
     "brace-style": "error",
-    "space-before-function-paren": [ "always", { "anonymous": "always", "named": "always", "asyncArrow": "always" } ],
+    "space-before-function-paren": [ 0, { "anonymous": 0, "named": 0, "asyncArrow": 0 } ],
     "func-names": ["error", "never"],
     "quotes": "off"
   }

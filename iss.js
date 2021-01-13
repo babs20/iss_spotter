@@ -11,18 +11,76 @@ const request = require("request");
 const fetchMyIP = function (done) {
   request('https://api.ipify.org?format=json', (err, response, body) => {
     if (err) {
-      done(err);
+      done(err, null);
       return;
     }
 
     if (response.statusCode !== 200) {
-      done(Error(`There was status code error: ${response.statusCode}`), null);
+      done(Error(`There was status code error in fetchMyIP: ${response.statusCode}`), null);
       return;
     }
 
     const data = JSON.parse(body);
-    done(err, data.ip);
+    done(null, data.ip);
   });
 };
 
-module.exports = { fetchMyIP };
+const fetchCoordsByIP = (ip, done) => {
+  request(`https://freegeoip.app/json/${ip}`, (err, response, body) => {
+    if (err) {
+      done(err, null);
+      return;
+    }
+
+    if (response.statusCode !== 200) {
+      done(Error(`There was status code error in fetchCoordsByIP: ${response.statusCode}`), null);
+      return;
+    }
+
+    const latitude = JSON.parse(body).latitude;
+    const longitude = JSON.parse(body).longitude;
+    done(null, { latitude, longitude });
+  });
+};
+
+const fetchISSFlyOverTimes = (geocoords, done) => {
+  request(`http://api.open-notify.org/iss-pass.json?lat=${geocoords.latitude}&lon=${geocoords.longitude}`, (err, response, body) => {
+    if (err) {
+      done(err, null);
+      return;
+    }
+
+    if (response.statusCode !== 200) {
+      done(Error(`There was status code error in fetchISSFlyOverTime: ${response.statusCode}`), null);
+      return;
+    }
+
+    const times = JSON.parse(body).response;
+    done(null, times);
+  });
+};
+
+const nextISSTimesForMyLocation = (callback) => { // callback hell
+  fetchMyIP((err, ip) => {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    fetchCoordsByIP(ip, (err, coords) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+      fetchISSFlyOverTimes(coords, (err, times) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        callback(err, times);
+      });
+    });
+  });
+};
+
+
+module.exports = { nextISSTimesForMyLocation };
